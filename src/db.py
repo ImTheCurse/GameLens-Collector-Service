@@ -1,28 +1,37 @@
-import psycopg
+from psycopg_pool import ConnectionPool
 
 
 class DatabaseConnection:
     """
-    Database connection using the singleton pattern. creating an new instance after creation of the DatabaseConncetion
-    gives the singleton object.
+    A Singleton wrapper around a Connection Pool.
     """
 
-    _instance = None
+    _pool = None
 
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            print("Creating new database connection")
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
+    @classmethod
+    def initialize(cls, conn_string):
+        if cls._pool is None:
+            print("Initializing Connection Pool...")
+            cls._pool = ConnectionPool(conn_string, min_size=1, max_size=10)
 
-    def __init__(self, conn_string):
-        # Only initialize once
-        if not self._initialized:
-            print("Initializing database connection")
-            self.connection_string = conn_string
-            self.connection = psycopg.connect(conn_string)
-            self._initialized = True
+    @classmethod
+    def get_connection(cls):
+        """
+        Returns a context manager that yields a connection from the pool.
+        """
+        if cls._pool is None:
+            raise Exception(
+                "Database not initialized. Call Database.initialize() first."
+            )
 
-    def get_connection(self):
-        return self.connection
+        # Usage: with Database.get_connection() as conn: ...
+        return cls._pool.connection()
+
+    @classmethod
+    def close(cls):
+        """
+        Clean up the pool on app shutdown.
+        """
+        if cls._pool:
+            cls._pool.close()
+            print("Connection Pool closed.")

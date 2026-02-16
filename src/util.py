@@ -13,7 +13,7 @@ conn_str = os.environ.get("PGSQL_CONN")
 if not conn_str:
     raise ValueError("PGSQL_CONN environment variable is not set")
 
-db = DatabaseConnection(conn_str)
+DatabaseConnection.initialize(conn_str)
 
 
 def allowed_file(filename: str):
