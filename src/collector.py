@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
 from psycopg.rows import dict_row
+from psycopg.types.json import Json
 from werkzeug.utils import secure_filename
 
 from src.db import DatabaseConnection
@@ -125,6 +126,7 @@ def get_raw_collection():
                     """,
                     (game_id, session_id),
                 ).fetchall()
+                conn.commit()
     except Exception as e:
         return jsonify(
             {"error": "Client Side Error", "message": str(e), "type": type(e).__name__}
@@ -136,3 +138,48 @@ def get_raw_collection():
                 row["image_data"] = base64.b64encode(row["image_data"]).decode("utf-8")
 
     return jsonify({"data": res}), 200
+
+
+@Collector.route("/collect/game", methods=["POST"])
+def insert_game_to_db():
+
+    # Required fields
+    data = request.json
+    game_id = str(uuid.uuid4())
+    name = data.get("name")
+    created_at = data.get("created_at")
+
+    if not name or not created_at:
+        raise MissingCollectorParam("name and created_at are required")
+
+    plugin_metadata = data.get("plugin_metadata")
+    game_metadata = data.get("game_metadata")
+
+    try:
+        with DatabaseConnection.get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """INSERT INTO game (
+                        game_id,
+                        name,
+                        created_at,
+                        plugin_metadata,
+                        game_metadata
+                        )
+                        VALUES (%s, %s, %s,%s,%s);""",
+                    (
+                        game_id,
+                        name,
+                        created_at,
+                        Json(plugin_metadata),
+                        Json(game_metadata),
+                    ),
+                )
+                conn.commit()
+
+    except Exception as e:
+        return jsonify(
+            {"error": "Client Side Error", "message": str(e), "type": type(e).__name__}
+        ), 400
+
+    return jsonify({"message": "Game inserted successfully"}), 200
