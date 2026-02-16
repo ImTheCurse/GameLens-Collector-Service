@@ -142,7 +142,6 @@ def get_raw_collection():
 
 @Collector.route("/collect/game", methods=["POST"])
 def insert_game_to_db():
-
     # Required fields
     data = request.json
     game_id = str(uuid.uuid4())
@@ -182,4 +181,41 @@ def insert_game_to_db():
             {"error": "Client Side Error", "message": str(e), "type": type(e).__name__}
         ), 400
 
-    return jsonify({"message": "Game inserted successfully"}), 200
+    return jsonify({"message": "Game inserted successfully", "game_id": game_id}), 200
+
+
+@Collector.route("/collect/session", methods=["POST"])
+def insert_session_to_db():
+    # Required fields
+    data = request.json
+    session_id = str(uuid.uuid4())
+    game_id = data.get("game_id")
+    started_at = data.get("started_at")
+
+    if not game_id or not started_at:
+        raise MissingCollectorParam("game_id and started_at are required")
+
+    # Optional fields
+    ended_at = data.get("ended_at")
+    client_info = data.get("client_info")
+
+    try:
+        with DatabaseConnection.get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO session(session_id,game_id,started_at,ended_at,client_info)
+                    VALUES(%s,%s,%s,%s,%s);
+                    """,
+                    (session_id, game_id, started_at, ended_at, Json(client_info)),
+                )
+                conn.commit()
+
+    except Exception as e:
+        return jsonify(
+            {"error": "Client Side Error", "message": str(e), "type": type(e).__name__}
+        ), 400
+
+    return jsonify(
+        {"message": "Session inserted successfully", "session_id": session_id}
+    ), 200
