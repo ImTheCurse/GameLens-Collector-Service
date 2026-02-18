@@ -1,0 +1,26 @@
+doc: "Register a new session"
+tags:
+  - Session
+parameters:
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      required:
+        - game_id
+        - started_at
+      properties:
+        game_id:
+          type: string
+        started_at:
+          type: string
+        ended_at:
+          type: string
+        client_info:
+          type: object
+responses:
+  200:
+    description: Session inserted successfully
+  400:
+    description: Missing required parameters

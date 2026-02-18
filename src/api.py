@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 
 load_dotenv()
+from flasgger import Swagger
 from flask import Flask, jsonify
 
 from src.collector import Collector
@@ -8,6 +9,7 @@ from src.errors import FileUploadError, MissingCollectorParam
 from src.util import UPLOAD_DIR, UPLOAD_SIZE
 
 app = Flask(__name__)
+swagger = Swagger(app)
 app.register_blueprint(Collector, url_prefix="/api/v1")
 
 

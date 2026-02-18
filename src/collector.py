@@ -3,6 +3,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 
+from flasgger import swag_from
 from flask import Blueprint, jsonify, request
 from psycopg.rows import dict_row
 from psycopg.types.json import Json
@@ -20,6 +21,7 @@ Collector = Blueprint("collector", __name__)
 
 
 @Collector.route("/collect", methods=["POST"])
+@swag_from("docs/collect.yml")
 def collect():
     # check if the post request has the file part
     if "file" not in request.files:
@@ -103,6 +105,7 @@ def collect():
 
 
 @Collector.route("/collect", methods=["GET"])
+@swag_from("docs/collection_get.yml")
 def get_raw_collection():
     session_id = request.args.get("session_id")
     game_id = request.args.get("game_id")
@@ -141,6 +144,7 @@ def get_raw_collection():
 
 
 @Collector.route("/collect/game", methods=["POST"])
+@swag_from("docs/game.yml")
 def insert_game_to_db():
     # Required fields
     data = request.json
@@ -185,6 +189,7 @@ def insert_game_to_db():
 
 
 @Collector.route("/collect/session", methods=["POST"])
+@swag_from("docs/session.yml")
 def insert_session_to_db():
     # Required fields
     data = request.json

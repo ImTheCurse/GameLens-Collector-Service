@@ -1,0 +1,26 @@
+doc: "Register a new game"
+tags:
+  - Game
+parameters:
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      required:
+        - name
+        - created_at
+      properties:
+        name:
+          type: string
+        created_at:
+          type: string
+        plugin_metadata:
+          type: object
+        game_metadata:
+          type: object
+responses:
+  200:
+    description: Game inserted successfully
+  400:
+    description: Missing required parameters

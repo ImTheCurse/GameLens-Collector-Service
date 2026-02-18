@@ -1,0 +1,17 @@
+doc: "Retrieve raw capture data"
+tags:
+  - Collector
+parameters:
+  - name: session_id
+    in: query
+    type: string
+    required: true
+  - name: game_id
+    in: query
+    type: string
+    required: true
+responses:
+  200:
+    description: List of capture data
+  400:
+    description: Missing session_id or game_id
