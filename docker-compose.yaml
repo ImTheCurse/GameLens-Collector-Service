@@ -1,12 +1,32 @@
 services:
+  traefik:
+    image: traefik:latest
+    command:
+      # Enable the dashboard (for debugging)
+      - "--api.insecure=true"
+      # Tell Traefik to listen to Docker events
+      - "--providers.docker=true"
+      # Don't expose every container automatically
+      - "--providers.docker.exposedbydefault=false"
+      # Define an entrypoint for standard HTTP
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "8000:80"
+      - "8080:8080" # The Traefik dashboard
+    volumes:
+      # This allows Traefik to read Docker labels
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
   collector:
     build: .
-    ports:
-      - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
     depends_on:
       - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.collector.rule=Host(`localhost`)"
+      - "traefik.http.routers.collector.entrypoints=web"
+      - "traefik.http.services.collector.loadbalancer.server.port=8000"
 
   redis:
     image: redis:alpine

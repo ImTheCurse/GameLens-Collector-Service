@@ -50,7 +50,9 @@
             const messageEl = document.getElementById("message");
             const sendBtn = document.getElementById("send");
 
-            const socket = io("http://localhost:8000");
+            const socket = io("http://localhost:8000", {
+                transports: ["websocket"], // Skips HTTP polling entirely
+            });
 
             function log(message) {
                 const div = document.createElement("div");
