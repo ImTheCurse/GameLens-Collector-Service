@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Socket.IO Hello World Demo</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 24px;
+            }
+            #log {
+                padding: 12px;
+                border: 1px solid #ddd;
+                min-height: 120px;
+            }
+            .row {
+                margin-bottom: 12px;
+            }
+            button {
+                padding: 8px 12px;
+            }
+            input {
+                padding: 6px;
+                width: 300px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Socket.IO Hello World Demo</h1>
+
+        <div class="row">
+            <label for="message">Message:</label>
+            <input id="message" type="text" value="hello from the browser" />
+            <button id="send">Send</button>
+        </div>
+
+        <div class="row">
+            <strong>Status:</strong> <span id="status">disconnected</span>
+        </div>
+
+        <div class="row">
+            <strong>Log:</strong>
+            <div id="log"></div>
+        </div>
+
+        <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+        <script>
+            const statusEl = document.getElementById("status");
+            const logEl = document.getElementById("log");
+            const messageEl = document.getElementById("message");
+            const sendBtn = document.getElementById("send");
+
+            const socket = io("http://localhost:8000");
+
+            function log(message) {
+                const div = document.createElement("div");
+                div.textContent = message;
+                logEl.appendChild(div);
+            }
+
+            socket.on("connect", () => {
+                statusEl.textContent = "connected";
+                log("Connected: " + socket.id);
+            });
+
+            socket.on("disconnect", () => {
+                statusEl.textContent = "disconnected";
+                log("Disconnected");
+            });
+
+            socket.on("response", (payload) => {
+                log("Response: " + JSON.stringify(payload));
+            });
+
+            socket.on("error", (payload) => {
+                log("Error: " + JSON.stringify(payload));
+            });
+
+            sendBtn.addEventListener("click", () => {
+                const msg = messageEl.value;
+                socket.emit("hello_world", { msg });
+                log("Sent hello_world: " + msg);
+            });
+        </script>
+    </body>
+</html>

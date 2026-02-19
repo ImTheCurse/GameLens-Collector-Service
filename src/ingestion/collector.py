@@ -17,32 +17,8 @@ from src.errors import (
 )
 from src.util import UPLOAD_DIR, allowed_file, validate_data
 
-Collector = Blueprint("collector", __name__)
 
-
-@Collector.route("/collect", methods=["POST"])
-@swag_from("docs/collect.yml")
-def collect():
-    # check if the post request has the file part
-    if "file" not in request.files:
-        raise MissingUploadFileError()
-
-    file = request.files["file"]
-    filename = str(file.filename)
-    # If the user does not select a file, the browser submits an empty file without a filename.
-    if file.filename == "":
-        raise MissingUploadFileError()
-
-    if file and allowed_file(filename):
-        filename = secure_filename(filename)
-        file.save(os.path.join(UPLOAD_DIR, filename))
-
-        file.seek(0)
-    else:
-        raise InvalidMediaFormatError()
-
-    data = request.form
-
+def collect_capture(data, image_bytes):
     validate_data(["session_id", "game_id", "captured_at"], data)
 
     # Required fields
@@ -83,7 +59,7 @@ def collect():
                     """,
                     (
                         capture_id,
-                        file.read(),
+                        image_bytes,
                         game_id,
                         session_id,
                         captured_at,
@@ -98,14 +74,47 @@ def collect():
                 )
             conn.commit()
     except Exception as e:
-        return jsonify(
-            {"error": "Client Side Error", "message": str(e), "type": type(e).__name__}
-        ), 400
-    return jsonify({"message": "File uploaded successfully"}), 200
+        return {
+            "error": "Client Side Error",
+            "message": str(e),
+            "type": type(e).__name__,
+        }, 400
+
+    return {"message": "File uploaded successfully"}, 200
+
+
+Collector = Blueprint("collector", __name__)
+
+
+@Collector.route("/collect", methods=["POST"])
+@swag_from("../docs/collect.yml")
+def collect():
+    # check if the post request has the file part
+    if "file" not in request.files:
+        raise MissingUploadFileError()
+
+    file = request.files["file"]
+    filename = str(file.filename)
+    # If the user does not select a file, the browser submits an empty file without a filename.
+    if file.filename == "":
+        raise MissingUploadFileError()
+
+    if file and allowed_file(filename):
+        filename = secure_filename(filename)
+        file.save(os.path.join(UPLOAD_DIR, filename))
+
+        file.seek(0)
+    else:
+        raise InvalidMediaFormatError()
+
+    data = request.form
+
+    payload, status = collect_capture(data, file.read())
+    return jsonify(payload), status
 
 
 @Collector.route("/collect", methods=["GET"])
-@swag_from("docs/collection_get.yml")
+@swag_from("../docs/collection_get.yml")
 def get_raw_collection():
     session_id = request.args.get("session_id")
     game_id = request.args.get("game_id")
@@ -144,7 +153,7 @@ def get_raw_collection():
 
 
 @Collector.route("/collect/game", methods=["POST"])
-@swag_from("docs/game.yml")
+@swag_from("../docs/game.yml")
 def insert_game_to_db():
     # Required fields
     data = request.json
@@ -189,7 +198,7 @@ def insert_game_to_db():
 
 
 @Collector.route("/collect/session", methods=["POST"])
-@swag_from("docs/session.yml")
+@swag_from("../docs/session.yml")
 def insert_session_to_db():
     # Required fields
     data = request.json

@@ -9,11 +9,13 @@ UPLOAD_SIZE = 25 * 1000 * 1000  # 25 MB
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)  # Creates the folder if it doesn't exist
 
-conn_str = os.environ.get("PGSQL_CONN")
-if not conn_str:
-    raise ValueError("PGSQL_CONN environment variable is not set")
 
-DatabaseConnection.initialize(conn_str)
+def init_db():
+    conn_str = os.environ.get("PGSQL_CONN")
+    if not conn_str:
+        raise ValueError("PGSQL_CONN environment variable is not set")
+
+    DatabaseConnection.initialize(conn_str)
 
 
 def allowed_file(filename: str):
