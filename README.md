@@ -31,6 +31,7 @@ docker compose up --build --scale collector=3
 - Direct container port: `http://localhost:8000`
 - Traefik dashboard: `http://localhost:8080`
 
+for both cases, add an environment variable called `PGSQL_CONN` with the connection string in order to connect to the DB.
 ## Tests
 Run the socket unit tests:
 
