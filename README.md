@@ -13,6 +13,12 @@ GameLens Collector Service is a Flask-based ingestion API and Socket.IO server u
 - Python **3.13+** (local)
 - Docker + Docker Compose (recommended for local/dev)
 
+> [!IMPORTANT] 
+> **Environment Variables:** You must configure the following in your `.env` file: `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB`. 
+> 
+> For your database connection (`PGSQL_CONN`), the host depends on how you are running the API:
+> * **Running via Docker:** `postgresql://<POSTGRES_USER>:<POSTGRES_PASSWORD>@db:5432/<POSTGRES_DB>`
+> * **Running locally (Host machine):** `postgresql://<POSTGRES_USER>:<POSTGRES_PASSWORD>@localhost:5432/<POSTGRES_DB>`
 ## Local development (uv)
 ```bash
 uv sync
@@ -30,6 +36,11 @@ docker compose up --build --scale collector=3
 > Note: you can change the number of collector services(here its 3) to allow more container to handle traffic.
 - Direct container port: `http://localhost:8000`
 - Traefik dashboard: `http://localhost:8080`
+
+Migrate the DB using the following command, after the startup of all docker containers:
+```bash
+docker exec -i postgres_db psql -U your_username -d your_database_name < db/GameLens-Schema.sql
+```
 
 ## Tests
 Run the socket unit tests:
