@@ -1,9 +1,3 @@
-# ruff: noqa: E402
-from gevent import monkey
-
-monkey.patch_all()
-import os
-
 from dotenv import load_dotenv
 from flasgger import Swagger
 from flask import Flask, jsonify
@@ -16,14 +10,19 @@ from src.socketio_ext import init_socketio, socketio
 from src.util import UPLOAD_DIR, UPLOAD_SIZE, init_db
 
 load_dotenv()
+print("loaded environment variables.", flush=True)
 
 app = Flask(__name__)
-app.config["REDIS_URL"] = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+print("initialized flask app.", flush=True)
+init_socketio(app)
+print("initialized flask socket.io.", flush=True)
+
 app.config["UPLOAD_FOLDER"] = UPLOAD_DIR
 app.config["MAX_CONTENT_LENGTH"] = UPLOAD_SIZE
 
-init_socketio(app)
-init_db()
+with app.app_context():
+    init_db()
+    print("initialized db.", flush=True)
 swagger = Swagger(app)
 app.register_blueprint(Collector, url_prefix="/api/v1")
 
@@ -45,3 +44,4 @@ def handle_collection_error(e):
 
 if __name__ == "__main__":
     socketio.run(app, port=8000)
+    print("ran socket.io on app with port 8000", flush=True)

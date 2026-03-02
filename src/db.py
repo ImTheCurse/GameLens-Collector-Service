@@ -12,7 +12,12 @@ class DatabaseConnection:
     def initialize(cls, conn_string):
         if cls._pool is None:
             print("Initializing Connection Pool...")
-            cls._pool = ConnectionPool(conn_string, min_size=1, max_size=10)
+            cls._pool = ConnectionPool(
+                conn_string,
+                min_size=1,
+                max_size=25,
+                open=True,  # Pre-open connections to avoid boot-time hangs
+            )
 
     @classmethod
     def get_connection(cls):

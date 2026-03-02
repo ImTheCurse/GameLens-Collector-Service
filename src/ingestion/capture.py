@@ -15,16 +15,15 @@ def handle_capture(json):
 
         payload, status = collect_capture(json, image_bytes=image_bytes)
         if status >= 400:
-            socketio.emit("error", {"status": status, **payload})
-            return
+            return {"status": "error", **payload}
 
         response_payload = {
             "status": "ok",
             "message": "recieved and stored raw capture.",
         }
-        socketio.emit("response", response_payload)
+        return response_payload
     except Exception as e:
-        socketio.emit("error", socket_error_payload(e))
+        return socket_error_payload(e)
 
 
 @socketio.on("hello_world")

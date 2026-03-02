@@ -6,7 +6,6 @@ GameLens Collector Service is a Flask-based ingestion API and Socket.IO server u
 - **HTTP API** for ingesting captures and metadata
 - **Socket.IO** endpoint for realtime capture events
 - **Postgres** storage via `psycopg`
-- **Redis** for Socket.IO multi-worker message queue
 - **Docker + Compose** for local and containerized runs
 
 ## Requirements
@@ -22,7 +21,7 @@ GameLens Collector Service is a Flask-based ingestion API and Socket.IO server u
 ## Local development (uv)
 ```bash
 uv sync
-uv run gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker --workers 1 --bind 0.0.0.0:8000 src.api:app
+uv run gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:8000 src.api:app
 ```
 
 > Tip: use **1 worker** for local Socket.IO testing to avoid session issues without a reverse proxy.
@@ -31,11 +30,8 @@ uv run gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketW
 This repo includes a `Dockerfile` and `docker-compose.yaml` with Traefik + Redis.
 
 ```bash
-docker compose up --build --scale collector=3
+docker compose up --build 
 ```
-> Note: you can change the number of collector services(here its 3) to allow more container to handle traffic.
-- Direct container port: `http://localhost:8000`
-- Traefik dashboard: `http://localhost:8080`
 
 Migrate the DB using the following command, after the startup of all docker containers:
 ```bash
@@ -50,5 +46,4 @@ uv run pytest
 ```
 
 ## Notes
-- Socket.IO is set up for gevent + gevent-websocket.
-- For multi-worker setups, keep Redis + traefik enabled
+- For multi-worker setups, add Redis + traefik

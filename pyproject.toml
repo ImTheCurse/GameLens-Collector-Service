@@ -15,4 +15,7 @@ dependencies = [
     "pytest>=9.0.2",
     "python-dotenv>=1.2.1",
     "redis>=7.2.0",
+    "python-socketio[client]>=5.16.1",
+    "tqdm>=4.67.3",
+    "eventlet>=0.40.4",
 ]

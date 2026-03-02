@@ -13,4 +13,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["uv", "run", "gunicorn","--worker-class", "geventwebsocket.gunicorn.workers.GeventWebSocketWorker", "--workers", "1", "--bind", "0.0.0.0:8000","--capture-output","--log-level","debug", "src.api:app"]
+CMD ["uv", "run", "gunicorn","--worker-class", "eventlet", "--workers", "1", "--bind", "0.0.0.0:8000","--capture-output","--log-level","debug", "src.api:app"]
