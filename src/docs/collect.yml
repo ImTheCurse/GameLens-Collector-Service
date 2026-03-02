@@ -20,8 +20,10 @@ parameters:
   - name: captured_at
     in: formData
     type: string
+    format: date-time
     required: true
-    description: Timestamp string
+    description: ISO-8601 timestamp (for example `2026-03-02T10:30:00Z`)
+    example: "2026-03-02T10:30:00Z"
   - name: run_id
     in: formData
     type: string

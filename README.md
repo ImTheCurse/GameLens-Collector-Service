@@ -13,7 +13,7 @@ GameLens Collector Service is a Flask-based ingestion API and Socket.IO server u
 - Docker + Docker Compose (recommended for local/dev)
 
 > [!IMPORTANT] 
-> **Environment Variables:** You must configure the following in your `.env` file: `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB`. 
+> **Environment Variables:** You must configure the following in your `.env` file: `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB`. Optionally, you could configure the `PGADMIN_MAIL` and `PGADMIN_PASS` for postgreSQL dashboard.
 > 
 > For your database connection (`PGSQL_CONN`), the host depends on how you are running the API:
 > * **Running via Docker:** `postgresql://<POSTGRES_USER>:<POSTGRES_PASSWORD>@db:5432/<POSTGRES_DB>`

@@ -18,12 +18,53 @@ from src.errors import (
 from src.util import UPLOAD_DIR, allowed_file, validate_data
 
 
+def _parse_timestamp(value, field_name, required=True):
+    """Parse ISO-8601 timestamp strings into datetime objects for DB inserts."""
+    if value is None:
+        if required:
+            raise MissingCollectorParam(f"{field_name} is required")
+        return None
+
+    if isinstance(value, datetime):
+        return value
+
+    if not isinstance(value, str):
+        raise MissingCollectorParam(
+            f"{field_name} must be a valid ISO-8601 timestamp string"
+        )
+
+    raw_value = value.strip()
+    if not raw_value:
+        if required:
+            raise MissingCollectorParam(f"{field_name} is required")
+        return None
+
+    # Swagger placeholders should not be treated as real timestamps.
+    if raw_value.lower() in {"string", "null", "none"}:
+        if required:
+            raise MissingCollectorParam(
+                f"{field_name} must be a valid ISO-8601 timestamp string"
+            )
+        return None
+
+    normalized_value = (
+        f"{raw_value[:-1]}+00:00" if raw_value.endswith("Z") else raw_value
+    )
+
+    try:
+        return datetime.fromisoformat(normalized_value)
+    except ValueError as exc:
+        raise MissingCollectorParam(
+            f"{field_name} must be a valid ISO-8601 timestamp string"
+        ) from exc
+
+
 def collect_capture(data, image_bytes):
     validate_data(["session_id", "game_id", "captured_at"], data)
 
     # Required fields
     capture_id = str(uuid.uuid4())
-    captured_at = data.get("captured_at")
+    captured_at = _parse_timestamp(data.get("captured_at"), "captured_at")
     session_id = data["session_id"]
     game_id = data["game_id"]
     received_at = datetime.now(timezone.utc)
@@ -156,13 +197,13 @@ def get_raw_collection():
 @swag_from("../docs/game.yml")
 def insert_game_to_db():
     # Required fields
-    data = request.json
+    data = request.get_json() or {}
     game_id = str(uuid.uuid4())
     name = data.get("name")
-    created_at = data.get("created_at")
+    created_at = _parse_timestamp(data.get("created_at"), "created_at")
 
-    if not name or not created_at:
-        raise MissingCollectorParam("name and created_at are required")
+    if not name:
+        raise MissingCollectorParam("name is required")
 
     plugin_metadata = data.get("plugin_metadata")
     game_metadata = data.get("game_metadata")
@@ -201,16 +242,16 @@ def insert_game_to_db():
 @swag_from("../docs/session.yml")
 def insert_session_to_db():
     # Required fields
-    data = request.json
+    data = request.get_json() or {}
     session_id = str(uuid.uuid4())
     game_id = data.get("game_id")
-    started_at = data.get("started_at")
+    started_at = _parse_timestamp(data.get("started_at"), "started_at")
 
-    if not game_id or not started_at:
-        raise MissingCollectorParam("game_id and started_at are required")
+    if not game_id:
+        raise MissingCollectorParam("game_id is required")
 
     # Optional fields
-    ended_at = data.get("ended_at")
+    ended_at = _parse_timestamp(data.get("ended_at"), "ended_at", required=False)
     client_info = data.get("client_info")
 
     try:
@@ -233,3 +274,60 @@ def insert_session_to_db():
     return jsonify(
         {"message": "Session inserted successfully", "session_id": session_id}
     ), 200
+
+
+@Collector.route("/collect/run", methods=["POST"])
+@swag_from("../docs/run.yml")
+def insert_run_to_db():
+    # Required fields
+    data = request.get_json() or {}
+    run_id = str(uuid.uuid4())
+    game_id = data.get("game_id")
+    session_id = data.get("session_id")
+    started_at = _parse_timestamp(data.get("started_at"), "started_at")
+
+    if not game_id or not session_id:
+        raise MissingCollectorParam("game_id and session_id are required")
+
+    # Optional fields
+    ended_at = _parse_timestamp(data.get("ended_at"), "ended_at", required=False)
+    end_reason = data.get("end_reason")
+    game_version = data.get("game_version")
+    run_meta = data.get("run_meta")
+
+    try:
+        with DatabaseConnection.get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO run(
+                        run_id,
+                        game_id,
+                        session_id,
+                        started_at,
+                        ended_at,
+                        end_reason,
+                        game_version,
+                        run_meta
+                    )
+                    VALUES(%s,%s,%s,%s,%s,%s,%s,%s);
+                    """,
+                    (
+                        run_id,
+                        game_id,
+                        session_id,
+                        started_at,
+                        ended_at,
+                        end_reason,
+                        game_version,
+                        Json(run_meta),
+                    ),
+                )
+                conn.commit()
+
+    except Exception as e:
+        return jsonify(
+            {"error": "Client Side Error", "message": str(e), "type": type(e).__name__}
+        ), 400
+
+    return jsonify({"message": "Run inserted successfully", "run_id": run_id}), 200

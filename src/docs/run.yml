@@ -1,6 +1,6 @@
-doc: "Register a new session"
+doc: "Register a new run"
 tags:
-  - Session
+  - Run
 parameters:
   - name: body
     in: body
@@ -9,9 +9,12 @@ parameters:
       type: object
       required:
         - game_id
+        - session_id
         - started_at
       properties:
         game_id:
+          type: string
+        session_id:
           type: string
         started_at:
           type: string
@@ -21,17 +24,24 @@ parameters:
           type: string
           format: date-time
           x-nullable: true
-          example: "2026-03-02T11:30:00Z"
-        client_info:
+          example: "2026-03-02T11:00:00Z"
+        end_reason:
+          type: string
+        game_version:
+          type: string
+        run_meta:
           type: object
       example:
         game_id: "00000000-0000-0000-0000-000000000000"
+        session_id: "00000000-0000-0000-0000-000000000000"
         started_at: "2026-03-02T10:30:00Z"
         ended_at: null
-        client_info:
-          os: "Windows 11"
+        end_reason: "win"
+        game_version: "1.0.0"
+        run_meta:
+          mode: "story"
 responses:
   200:
-    description: Session inserted successfully
+    description: Run inserted successfully
   400:
     description: Missing required parameters

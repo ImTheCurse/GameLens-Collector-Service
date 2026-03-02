@@ -15,10 +15,17 @@ parameters:
           type: string
         created_at:
           type: string
+          format: date-time
+          example: "2026-03-02T10:30:00Z"
         plugin_metadata:
           type: object
         game_metadata:
           type: object
+      example:
+        name: "Hades"
+        created_at: "2026-03-02T10:30:00Z"
+        plugin_metadata: {}
+        game_metadata: {}
 responses:
   200:
     description: Game inserted successfully
