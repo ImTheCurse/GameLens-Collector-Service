@@ -14,6 +14,7 @@ GameLens Collector Service is a Flask-based ingestion API and Socket.IO server u
 
 > [!IMPORTANT] 
 > **Environment Variables:** You must configure the following in your `.env` file: `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB`. Optionally, you could configure the `PGADMIN_MAIL` and `PGADMIN_PASS` for postgreSQL dashboard.
+> Also,  you must configure the `CLASSIFIER_SERVICE_HOST_URL` thats used for triggering the Event Classifier Service.
 > 
 > For your database connection (`PGSQL_CONN`), the host depends on how you are running the API:
 > * **Running via Docker:** `postgresql://<POSTGRES_USER>:<POSTGRES_PASSWORD>@db:5432/<POSTGRES_DB>`
@@ -27,7 +28,7 @@ uv run gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:8000 src.api:
 > Tip: use **1 worker** for local Socket.IO testing to avoid session issues without a reverse proxy.
 
 ## Docker / Compose
-This repo includes a `Dockerfile` and `docker-compose.yaml` with Traefik + Redis.
+This repo includes a `Dockerfile` and `docker-compose.yaml`.
 
 ```bash
 docker compose up --build 
@@ -47,3 +48,6 @@ uv run pytest
 
 ## Notes
 - For multi-worker setups, add Redis + traefik
+
+## Security 
+We haven't focused on security in this project, but there needs to be some sort of session cookie / authentication method against the client, and between services(Collector->Classifier) which will be added at a later date.

@@ -7,6 +7,7 @@ from flasgger import swag_from
 from flask import Blueprint, jsonify, request
 from psycopg.rows import dict_row
 from psycopg.types.json import Json
+import requests
 from werkzeug.utils import secure_filename
 
 from src.db import DatabaseConnection
@@ -60,13 +61,14 @@ def _parse_timestamp(value, field_name, required=True):
 
 
 def collect_capture(data, image_bytes):
-    validate_data(["session_id", "game_id", "captured_at"], data)
+    validate_data(["session_id", "game_id", "captured_at", "capture_index"], data)
 
     # Required fields
     capture_id = str(uuid.uuid4())
     captured_at = _parse_timestamp(data.get("captured_at"), "captured_at")
     session_id = data["session_id"]
     game_id = data["game_id"]
+    capture_index = data["capture_index"]
     received_at = datetime.now(timezone.utc)
 
     # Optional Fields
@@ -94,9 +96,10 @@ def collect_capture(data, image_bytes):
                     mouse_y,
                     screenshot_hash,
                     image_height,
-                    image_width
+                    image_width,
+                    capture_index
                     )
-                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);
                     """,
                     (
                         capture_id,
@@ -111,6 +114,7 @@ def collect_capture(data, image_bytes):
                         screenshot_hash,
                         image_height,
                         image_width,
+                        capture_index,
                     ),
                 )
             conn.commit()
@@ -286,8 +290,8 @@ def insert_run_to_db():
     session_id = data.get("session_id")
     started_at = _parse_timestamp(data.get("started_at"), "started_at")
 
-    if not game_id or not session_id:
-        raise MissingCollectorParam("game_id and session_id are required")
+    if not game_id or not session_id or not started_at:
+        raise MissingCollectorParam("game_id, session_id, and started_at are required")
 
     # Optional fields
     ended_at = _parse_timestamp(data.get("ended_at"), "ended_at", required=False)
@@ -331,3 +335,48 @@ def insert_run_to_db():
         ), 400
 
     return jsonify({"message": "Run inserted successfully", "run_id": run_id}), 200
+
+@Collector.route('/collect/run/end',methods=["PUT"])
+@swag_from("../docs/run_end.yml")
+def end_run():
+    data = request.get_json() or {}
+    run_id = data.get("run_id")
+    ended_at = _parse_timestamp(data.get("ended_at"), "ended_at")
+
+    if not run_id:
+        raise MissingCollectorParam("run_id is required")
+
+    try:
+        with DatabaseConnection.get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    UPDATE run
+                    SET ended_at = %s
+                    WHERE run_id = %s;
+                    """,
+                    (ended_at, run_id),
+                )
+                conn.commit()
+
+                classifier_url = os.environ.get("CLASSIFIER_SERVICE_HOST_URL")
+                if not classifier_url:
+                    raise ValueError("CLASSIFIER_SERVICE_HOST_URL environment variable is not set")
+                
+
+                response = requests.get(f"{classifier_url}/api/v1/classifier", params={"run_id": run_id})
+                if response.status_code != 200:
+                    return jsonify(
+                        {
+                            "error": "Classification Service Error",
+                            "message": f"Failed to trigger classification for run_id {run_id}",
+                            "details": response.text,
+                        }
+                    ), 500
+
+    except Exception as e:
+        return jsonify(
+            {"error": "Client Side Error", "message": str(e), "type": type(e).__name__}
+        ), 400
+
+    return jsonify({"message": "Run ended successfully", "run_id": run_id,"classifications": response.json()}), 200

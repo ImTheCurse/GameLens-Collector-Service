@@ -57,7 +57,42 @@ def setup_test_environment():
     session_id = session_resp.json().get("session_id")
     print(f"inserted mock session, got session_id: {session_id}")
 
-    return game_id, session_id
+    run_id = requests.post(
+        f"{BASE_URL}/collect/run",
+        json={
+            "game_id": game_id,
+            "session_id": session_id,
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "client_info": {"mode": "batch_importer"},
+        },
+    )
+    run_id = run_id.json().get("run_id")
+    print(f"inserted mock run, got run_id: {run_id}")
+
+    return game_id, session_id,run_id
+
+def extract_serial_number(filepath):
+    """
+    Helper function to extract the integer serial number from a path.
+    Expects format: /path/to/file/<filename>_<serial_number>.<ext>
+    """
+    # 1. Isolate just the filename (e.g., "game_screen_042.jpg")
+    base_name = os.path.basename(filepath)
+
+    # 2. Strip off the extension (e.g., "game_screen_042")
+    name_without_ext = os.path.splitext(base_name)[0]
+
+    try:
+        # 3. Split from the right side at the first underscore it finds,
+        #    grab the last piece, and convert to integer.
+        serial_str = name_without_ext.rsplit("_x", 1)[-1]
+        return int(serial_str)
+    except (ValueError, IndexError):
+        # Failsafe: If a file doesn't have an underscore or number,
+        # send it to the very beginning of the list.
+        return -1
+
+
 
 
 sio = socketio.Client()
@@ -78,7 +113,7 @@ if __name__ == "__main__":
         print("No valid images found in test_data/")
         exit(0)
 
-    game_id, session_id = setup_test_environment()
+    game_id, session_id,run_id = setup_test_environment()
     sio.connect(SIO_URL)
 
     # Iterate through all files in the folder
@@ -91,13 +126,16 @@ if __name__ == "__main__":
                 if os.path.isfile(file_path):
                     print(f"Processing: {filename}")
 
+                    capture_index = extract_serial_number(filename)
                     with open(file_path, "rb") as f:
                         image_bytes = f.read()
 
                     payload = {
                         "game_id": game_id,
                         "session_id": session_id,
+                        "run_id": run_id,
                         "captured_at": datetime.now(timezone.utc).isoformat(),
+                        "capture_index": capture_index,
                         "image_data": image_bytes,
                         "screenshot_hash": f"hash_{filename}",
                     }

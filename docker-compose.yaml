@@ -16,6 +16,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
+    networks:
+      - db_network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -29,6 +31,8 @@ services:
       - "5050:5050"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - db_network
 
   collector:
     build: .
@@ -39,7 +43,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - db_network
 
 volumes:
   postgres_data:
   pgadmin_data:
+
+networks:
+    db_network:
+        external: true

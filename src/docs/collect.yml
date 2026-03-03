@@ -24,9 +24,18 @@ parameters:
     required: true
     description: ISO-8601 timestamp (for example `2026-03-02T10:30:00Z`)
     example: "2026-03-02T10:30:00Z"
+  - name: capture_index
+    in: formData
+    type: integer
+    required: true
+    description: Monotonic index of the capture within the session/run
   - name: run_id
     in: formData
     type: string
+  - name: screenshot_hash
+    in: formData
+    type: string
+    description: Optional hash/fingerprint for image deduplication or integrity checks
   - name: mouse_x
     in: formData
     type: integer
