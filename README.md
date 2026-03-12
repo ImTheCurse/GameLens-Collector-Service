@@ -36,7 +36,7 @@ docker compose up --build
 
 Migrate the DB using the following command, after the startup of all docker containers:
 ```bash
-docker exec -i postgres_db psql -U your_username -d your_database_name < db/GameLens-Schema.sql
+docker exec -i postgres_db psql -U your_username -d your_database_name < db/GameLens-Schema-Updated.sql
 ```
 
 ## Tests
