@@ -1,0 +1,27 @@
+doc: "Insert a new user"
+tags:
+  - User
+parameters:
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "player_one"
+        password:
+          type: string
+          example: "s3cr3t"
+      example:
+        username: "player_one"
+        password: "s3cr3t"
+responses:
+  200:
+    description: User inserted successfully
+  400:
+    description: Missing required parameters or insert failure

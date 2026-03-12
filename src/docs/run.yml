@@ -9,37 +9,18 @@ parameters:
       type: object
       required:
         - game_id
-        - session_id
-        - started_at
+        - duration
       properties:
         game_id:
-          type: string
-        session_id:
-          type: string
-        started_at:
-          type: string
-          format: date-time
-          example: "2026-03-02T10:30:00Z"
-        ended_at:
-          type: string
-          format: date-time
-          x-nullable: true
-          example: "2026-03-02T11:00:00Z"
-        end_reason:
-          type: string
-        game_version:
-          type: string
-        run_meta:
-          type: object
+          type: integer
+          example: 1
+        duration:
+          type: number
+          format: float
+          example: 125.5
       example:
-        game_id: "00000000-0000-0000-0000-000000000000"
-        session_id: "00000000-0000-0000-0000-000000000000"
-        started_at: "2026-03-02T10:30:00Z"
-        ended_at: null
-        end_reason: "win"
-        game_version: "1.0.0"
-        run_meta:
-          mode: "story"
+        game_id: 1
+        duration: 125.5
 responses:
   200:
     description: Run inserted successfully

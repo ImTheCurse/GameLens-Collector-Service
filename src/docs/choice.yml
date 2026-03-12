@@ -1,0 +1,33 @@
+doc: "Register a new choice"
+tags:
+  - Choice
+parameters:
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      required:
+        - run_id
+        - choice_options
+      properties:
+        run_id:
+          type: integer
+          example: 1
+        choice_options:
+          type: object
+        selected:
+          type: string
+          example: "option_a"
+      example:
+        run_id: 1
+        choice_options:
+          options:
+            - "option_a"
+            - "option_b"
+        selected: "option_a"
+responses:
+  200:
+    description: Choice inserted successfully
+  400:
+    description: Missing required parameters

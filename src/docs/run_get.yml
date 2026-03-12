@@ -1,0 +1,16 @@
+doc: "Retrieve a run by id"
+tags:
+  - Run
+parameters:
+  - name: run_id
+    in: query
+    type: integer
+    required: true
+    example: 1
+responses:
+  200:
+    description: Run details
+  400:
+    description: Missing run_id parameter or query failure
+  404:
+    description: Run not found

@@ -1,0 +1,16 @@
+doc: "Retrieve a user by username"
+tags:
+  - User
+parameters:
+  - name: username
+    in: query
+    type: string
+    required: true
+    example: "player_one"
+responses:
+  200:
+    description: User details
+  400:
+    description: Missing username parameter or query failure
+  404:
+    description: User not found

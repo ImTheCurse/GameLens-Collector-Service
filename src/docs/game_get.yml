@@ -1,0 +1,16 @@
+doc: "Retrieve a game by id"
+tags:
+  - Game
+parameters:
+  - name: game_id
+    in: query
+    type: integer
+    required: true
+    example: 1
+responses:
+  200:
+    description: Game details
+  400:
+    description: Missing game_id parameter or query failure
+  404:
+    description: Game not found

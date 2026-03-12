@@ -1,0 +1,14 @@
+doc: "Retrieve choices by run id"
+tags:
+  - Choice
+parameters:
+  - name: run_id
+    in: query
+    type: integer
+    required: true
+    example: 1
+responses:
+  200:
+    description: List of choices
+  400:
+    description: Missing run_id parameter or query failure

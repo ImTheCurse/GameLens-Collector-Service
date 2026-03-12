@@ -4,9 +4,13 @@ from flask import Flask, jsonify
 
 # Don't remove "useless" import, decorator registration is at runtime.
 import src.ingestion.capture  # noqa: F401
+from src.choice.choice import Choice
 from src.errors import FileUploadError, MissingCollectorParam
+from src.game.game import Game
 from src.ingestion.collector import Collector
+from src.run.run import Run
 from src.socketio_ext import init_socketio, socketio
+from src.user.user import User
 from src.util import UPLOAD_DIR, UPLOAD_SIZE, init_db
 
 load_dotenv()
@@ -25,6 +29,10 @@ with app.app_context():
     print("initialized db.", flush=True)
 swagger = Swagger(app)
 app.register_blueprint(Collector, url_prefix="/api/v1")
+app.register_blueprint(Choice, url_prefix="/api/v1")
+app.register_blueprint(Game, url_prefix="/api/v1")
+app.register_blueprint(Run, url_prefix="/api/v1")
+app.register_blueprint(User, url_prefix="/api/v1/")
 
 
 @app.errorhandler(MissingCollectorParam)
